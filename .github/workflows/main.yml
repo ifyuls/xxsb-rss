@@ -1,0 +1,48 @@
+name: Generate Daily StudyTimes RSS
+
+on:
+  schedule:
+    # 每天北京时间早晨 8:10 运行 (UTC 00:10)，仅限周一、三、五
+    - cron: '10 0 * * 1,3,5'
+  workflow_dispatch: # 允许手动点击按钮运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install aiohttp beautifulsoup4 feedgen pytz
+
+      # 第一步：归档旧文件
+      - name: Archive Previous RSS
+        run: |
+          mkdir -p history
+          # 检查旧文件是否存在，存在则改名移入 history 文件夹
+          if [ -f "rss_studytimes.xml" ]; then
+            # 使用文件最后的修改日期作为存档文件名
+            LAST_MOD_DATE=$(date -r rss_studytimes.xml +'%Y-%m-%d')
+            mv rss_studytimes.xml "history/studytimes_${LAST_MOD_DATE}.xml"
+            echo "Archived previous XML to history/studytimes_${LAST_MOD_DATE}.xml"
+          fi
+
+      # 第二步：运行学习时报爬虫生成新的 rss_studytimes.xml
+      # 请确保你的脚本文件名是 studytimes.py
+      - name: Run scraper
+        run: python xxsb-scraper.py
+
+      # 第三步：自动提交新生成的 RSS 和归档文件
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update Daily StudyTimes RSS and Archive previous one"
+          # 提交所有更改，包括根目下的 xml 和 history 文件夹
+          file_pattern: '.'
