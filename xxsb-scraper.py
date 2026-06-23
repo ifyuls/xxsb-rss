@@ -21,9 +21,6 @@ DEFAULT_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
 }
 
-# 限制并发连接数
-CONNECTOR = aiohttp.TCPConnector(limit_per_host=5, limit=10)
-
 async def fetch(url, session, retries=3):
     """带重试的抓取函数"""
     for attempt in range(retries):
@@ -109,7 +106,9 @@ async def parse_single_page(p_name, p_url, session):
     return articles
 
 async def main():
-    async with aiohttp.ClientSession(connector=CONNECTOR) as session:
+    # ---------- 关键修改：在异步函数内部创建连接器 ----------
+    connector = aiohttp.TCPConnector(limit_per_host=5, limit=10)
+    async with aiohttp.ClientSession(connector=connector) as session:
         print(f"🚀 抓取启动 | 日期: {DATE_PATH}")
         print(f"🔗 首页: {BASE_INDEX}")
         index_html = await fetch(BASE_INDEX, session)
