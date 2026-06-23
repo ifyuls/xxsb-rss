@@ -15,6 +15,7 @@ def get_bj_date():
 
 DATE_PATH = get_bj_date()
 BASE_URL_DIR = f"https://paper.studytimes.cn/cntheory/{DATE_PATH}/"
+BASE_URL_DIR = "https://paper.studytimes.cn/cntheory/2026-06/22/"
 BASE_INDEX = urljoin(BASE_URL_DIR, "node_1.html")
 
 DEFAULT_HEADERS = {
